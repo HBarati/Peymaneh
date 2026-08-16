@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>پیمانه — نمونه رابط کاربری</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#101722;
+  --bg-deep:#0B111A;
+  --panel:#161F2C;
+  --panel-2:#1B2534;
+  --line:#25334A;
+  --line-soft:#1E2A3C;
+  --ink:#DFE7F2;
+  --muted:#78889F;
+  --muted-2:#556479;
+  --fluid-top:#5BE0CE;
+  --fluid-bot:#1F8FAE;
+  --over:#E8A33B;
+  --rank:#8B7BF7;
+  --glass:#2E4059;
+  --radius:3px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{
+  background:
+    radial-gradient(1100px 600px at 80% -10%, #17243550 0%, transparent 60%),
+    var(--bg);
+  color:var(--ink);
+  font-family:Vazirmatn, system-ui, sans-serif;
+  font-weight:400;
+  font-variant-numeric:tabular-nums;
+  -webkit-font-smoothing:antialiased;
+  padding-bottom:80px;
+}
+.mono{font-family:'JetBrains Mono', monospace;}
+.eyebrow{
+  font-family:'JetBrains Mono',monospace;
+  font-size:10px; letter-spacing:.22em; text-transform:uppercase;
+  color:var(--muted-2);
+}
+
+/* ── instrument bar ─────────────────────────── */
+header{
+  position:sticky; top:0; z-index:40;
+  display:flex; align-items:center; gap:28px;
+  padding:14px 28px;
+  background:#0F1620ee;
+  backdrop-filter:blur(14px);
+  border-bottom:1px solid var(--line-soft);
+}
+.brand{display:flex; align-items:baseline; gap:10px}
+.brand h1{font-size:17px; font-weight:600; letter-spacing:-.01em}
+.brand span{font-size:10px; color:var(--muted-2); letter-spacing:.2em; font-family:'JetBrains Mono',monospace}
+.gauge-row{display:flex; align-items:center; gap:22px; margin-inline-start:auto}
+.stat{display:flex; flex-direction:column; gap:3px; text-align:start}
+.stat b{font-size:15px; font-weight:600}
+.stat i{font-style:normal; font-size:10px; color:var(--muted); letter-spacing:.04em}
+.daybar{width:150px; height:3px; background:var(--line); border-radius:2px; overflow:hidden}
+.daybar>span{display:block; height:100%; background:linear-gradient(90deg,var(--fluid-bot),var(--fluid-top)); transition:width .8s cubic-bezier(.2,.8,.2,1)}
+.live{display:flex; align-items:center; gap:8px; padding:6px 12px; border:1px solid var(--line); border-radius:2px; background:var(--panel)}
+.live.on{border-color:#2E6E6A; background:#132726}
+.dot{width:6px;height:6px;border-radius:50%;background:var(--muted-2)}
+.live.on .dot{background:var(--fluid-top); animation:pulse 1.6s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.25}}
+
+/* ── sections ───────────────────────────────── */
+main{max-width:1400px; margin:0 auto; padding:0 28px}
+section{padding:34px 0 10px}
+.sec-head{display:flex; align-items:flex-end; gap:14px; padding-bottom:20px; border-bottom:1px solid var(--line-soft); margin-bottom:26px}
+.sec-head h2{font-size:14px; font-weight:600; letter-spacing:.01em}
+.sec-head p{font-size:12px; color:var(--muted); margin-inline-start:auto}
+
+/* ── open board ─────────────────────────────── */
+.board{
+  display:flex; gap:6px; align-items:flex-end;
+  overflow-x:auto; padding:0 2px 24px;
+  scrollbar-width:thin; scrollbar-color:var(--line) transparent;
+}
+.board::-webkit-scrollbar{height:6px}
+.board::-webkit-scrollbar-thumb{background:var(--line); border-radius:3px}
+
+.slot{
+  flex:0 0 150px;
+  display:flex; flex-direction:column; align-items:center;
+  padding:12px 8px 14px; border-radius:var(--radius);
+  border:1px solid transparent; cursor:grab;
+  transition:background .18s, border-color .18s, transform .18s;
+}
+.slot:hover{background:#18212E; border-color:var(--line-soft)}
+.slot.sel{background:#18232F; border-color:#2C4A5C}
+.slot.dragging{opacity:.35; cursor:grabbing}
+.slot.over{border-inline-start:2px solid var(--rank)}
+
+.rank{
+  font-family:'JetBrains Mono',monospace; font-size:10px; letter-spacing:.1em;
+  color:var(--rank); opacity:.85; margin-bottom:6px;
+}
+.rank.p1::after{content:' ▲'; font-size:8px}
+
+svg.gauge{display:block; overflow:visible}
+.tube-line{stroke:var(--glass); stroke-width:1; fill:none}
+.tube-ghost{stroke:var(--glass); stroke-width:1; stroke-dasharray:3 4; fill:none}
+.tick{stroke:#31445F; stroke-width:1}
+.tick-h{stroke:#425A78; stroke-width:1}
+.tick-label{fill:var(--muted-2); font-size:8px; font-family:'JetBrains Mono',monospace}
+.rim{fill:none; stroke:#4E7C93; stroke-width:1.4}
+.rim.over{stroke:var(--over)}
+.fluid-body{fill:url(#fg)}
+.fluid-wave{fill:url(#fg)}
+.fluid-g{transition:transform 1.05s cubic-bezier(.22,.9,.25,1)}
+.wave-anim{animation:drift 7s linear infinite}
+@keyframes drift{from{transform:translateX(0)}to{transform:translateX(-60px)}}
+.meniscus{fill:#9BF2E6; opacity:.5}
+.spill{fill:var(--over); opacity:.9}
+.spill-cap{fill:#F6C578}
+.glare{fill:#ffffff; opacity:.045}
+
+.meta{margin-top:12px; text-align:center; width:100%}
+.title{font-size:12.5px; font-weight:500; line-height:1.5; min-height:38px;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden}
+.cat{font-size:9.5px; color:var(--muted); letter-spacing:.02em; margin-top:2px}
+.read{margin-top:8px; font-size:12px; font-weight:600; letter-spacing:.02em}
+.read small{font-weight:400; color:var(--muted); font-size:11px}
+.pct{font-size:10px; color:var(--muted-2); margin-top:2px; font-family:'JetBrains Mono',monospace}
+.pct.over{color:var(--over)}
+
+.acts{display:flex; gap:4px; margin-top:10px; opacity:0; transition:opacity .18s}
+.slot:hover .acts, .slot.sel .acts{opacity:1}
+button{
+  font-family:inherit; font-size:10.5px; color:var(--muted);
+  background:var(--panel-2); border:1px solid var(--line);
+  border-radius:2px; padding:4px 7px; cursor:pointer;
+  transition:.15s;
+}
+button:hover{color:var(--ink); border-color:#3B5170; background:#22303F}
+button.go{color:#7FE9DA; border-color:#2C5A55}
+button.go:hover{background:#15302E}
+button:focus-visible{outline:2px solid var(--rank); outline-offset:1px}
+
+/* ── archive ────────────────────────────────── */
+.seg{display:flex; gap:0; border:1px solid var(--line); border-radius:2px; overflow:hidden}
+.seg button{border:0; border-radius:0; padding:5px 13px; background:transparent; font-size:11px}
+.seg button + button{border-inline-start:1px solid var(--line)}
+.seg button.on{background:#22303F; color:var(--ink)}
+
+.groups{display:flex; flex-direction:column; gap:2px}
+.group{border-top:1px solid var(--line-soft); padding:16px 0 18px}
+.group:first-child{border-top:0}
+.g-head{display:flex; align-items:baseline; gap:12px; margin-bottom:14px}
+.g-head h3{font-size:12px; font-weight:600}
+.g-stat{font-size:10.5px; color:var(--muted); font-family:'JetBrains Mono',monospace; margin-inline-start:auto}
+.minis{display:flex; flex-wrap:wrap; gap:4px; align-items:flex-end}
+.mini{
+  width:78px; padding:8px 4px 9px; text-align:center; border-radius:2px;
+  transition:background .15s;
+}
+.mini:hover{background:#18212E}
+.mini .t{font-size:10px; color:var(--muted); line-height:1.45; margin-top:7px;
+  display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; min-height:29px}
+.ratio{font-family:'JetBrains Mono',monospace; font-size:10px; margin-top:3px; color:#6FD8C8}
+.ratio.hi{color:var(--over)}
+.ratio.lo{color:#7BA7E8}
+
+.empty{color:var(--muted-2); font-size:12px; padding:24px 0}
+.note{font-size:11px; color:var(--muted-2); line-height:1.9; padding:22px 0 0; border-top:1px solid var(--line-soft); margin-top:30px}
+
+@media (prefers-reduced-motion:reduce){
+  .fluid-g{transition:none}
+  .wave-anim{animation:none}
+  .live.on .dot{animation:none}
+}
+</style>
+</head>
+<body>
+
+<svg width="0" height="0" style="position:absolute">
+  <defs>
+    <linearGradient id="fg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="var(--fluid-top)"/>
+      <stop offset="100%" stop-color="var(--fluid-bot)"/>
+    </linearGradient>
+  </defs>
+</svg>
+
+<header>
+  <div class="brand">
+    <h1>پیمانه</h1>
+    <span>CALIBRATION</span>
+  </div>
+
+  <div class="gauge-row">
+    <div class="stat">
+      <b id="dayTotal">۰:۰۰</b>
+      <i>امروز از ۶:۰۰ هدف</i>
+      <div class="daybar" style="margin-top:5px"><span id="dayBar" style="width:0%"></span></div>
+    </div>
+    <div class="stat">
+      <b id="openSum">۰:۰۰</b>
+      <i>تخمین باقی‌مانده‌ی بازها</i>
+    </div>
+    <div class="live" id="live">
+      <span class="dot"></span>
+      <span id="liveText" style="font-size:11.5px">تایمری فعال نیست</span>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <section>
+    <div class="sec-head">
+      <h2>تسک‌های باز</h2>
+      <span class="eyebrow">OPEN · DRAG TO PRIORITIZE</span>
+      <p>ارتفاع شیشه = تخمین · مقیاس مشترک · بالای خط لبه سرریز است</p>
+    </div>
+    <div class="board" id="board"></div>
+  </section>
+
+  <section>
+    <div class="sec-head">
+      <h2>تسک‌های بسته‌شده</h2>
+      <span class="eyebrow">CLOSED</span>
+      <div style="margin-inline-start:auto" class="seg" id="seg">
+        <button data-g="size" class="on">سایز</button>
+        <button data-g="week">هفته</button>
+        <button data-g="prio">اولویت</button>
+      </div>
+    </div>
+    <div class="groups" id="groups"></div>
+  </section>
+
+  <p class="note">
+    نمونه‌ی تعاملی — داده‌ها ساختگی‌اند و در حافظه‌ی صفحه‌اند.
+    تایمر را با «شروع» بزن یا با «+۱۵د» ببین پر شدن چطور حرکت می‌کند.
+    استوانه‌ها را بکش و جابه‌جا کن تا اولویت عوض شود.
+  </p>
+
+</main>
+
+<script>
+/* ══ داده‌ی نمونه ══════════════════════════════ */
+let tasks = [
+  {id:1, title:'طراحی اسکیمای موضوع‌های کافکا برای بیلینگ', cat:'معماری', est:240, log:96,  prio:1, open:true},
+  {id:2, title:'بازبینی PR تیم موتور تحلیلی', cat:'بازبینی', est:60, log:78, prio:2, open:true},
+  {id:3, title:'مستند لایه‌ی موتورهای تحلیلی', cat:'مستندسازی', est:180, log:35, prio:1, open:true},
+  {id:4, title:'کوئری‌های تجمیعی روی StarRocks', cat:'تحلیل داده', est:120, log:120, prio:2, open:true},
+  {id:5, title:'جلسه‌ی هم‌راستایی با ذی‌نفعان', cat:'جلسه', est:90, log:22, prio:3, open:true},
+  {id:6, title:'دیباگ تاخیر مصرف‌کننده', cat:'کدنویسی', est:null, log:64, prio:2, open:true},
+  {id:7, title:'کاتالوگ قابلیت‌های پلتفرم', cat:'مستندسازی', est:300, log:145, prio:1, open:true},
+
+  {id:20, title:'پایپ‌لاین ورود داده‌ی CDR', cat:'کدنویسی', est:480, log:660, prio:1, open:false, week:0},
+  {id:21, title:'داشبورد سلامت سرویس‌ها', cat:'تحلیل داده', est:240, log:210, prio:2, open:false, week:0},
+  {id:22, title:'ریتروی اسپرینت', cat:'جلسه', est:60, log:75, prio:3, open:false, week:0},
+  {id:23, title:'بازنویسی اسکریپت مهاجرت', cat:'کدنویسی', est:120, log:245, prio:2, open:false, week:1},
+  {id:24, title:'مستند تصمیم معماری ADR-۱۴', cat:'مستندسازی', est:90, log:230, prio:1, open:false, week:1},
+  {id:25, title:'وان‌آن‌وان با تیم', cat:'کوچینگ', est:45, log:50, prio:3, open:false, week:1},
+  {id:26, title:'بررسی هزینه‌ی ذخیره‌سازی', cat:'تحلیل داده', est:150, log:100, prio:2, open:false, week:2},
+  {id:27, title:'کارگاه Iceberg', cat:'کوچینگ', est:180, log:195, prio:1, open:false, week:2},
+  {id:28, title:'رفع باگ گزارش روزانه', cat:'کدنویسی', est:30, log:85, prio:1, open:false, week:2},
+];
+
+/* ══ کمکی‌ها ═══════════════════════════════════ */
+const fa = n => String(n).replace(/\d/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
+const hm = m => { m=Math.round(m); return fa(Math.floor(m/60)) + ':' + fa(String(m%60).padStart(2,'0')); };
+const pad2 = n => fa(String(n).padStart(2,'0'));
+const sizeOf = e => !e ? 'بدون تخمین' : e<30 ? 'XS · زیر نیم‌ساعت' : e<120 ? 'S · نیم تا ۲ ساعت' : e<480 ? 'M · ۲ تا ۸ ساعت' : 'L · بیش از یک روز';
+const sizeRank = {'XS · زیر نیم‌ساعت':0,'S · نیم تا ۲ ساعت':1,'M · ۲ تا ۸ ساعت':2,'L · بیش از یک روز':3,'بدون تخمین':4};
+const prioName = p => ['','فوری','عادی','کم‌فشار'][p];
+const weekName = w => ['این هفته','هفته‌ی گذشته','دو هفته پیش'][w] || 'قدیمی‌تر';
+
+/* ══ هندسه‌ی استوانه ═══════════════════════════ */
+const GEO = {cx:44, rx:23, ry:7, base:296, maxH:200, minH:52, ghostH:120, spillMax:58};
+
+function tubePaths(H){
+  const {cx,rx,ry,base} = GEO, rim = base - H;
+  return {
+    rim,
+    clip:`M ${cx-rx},${rim} L ${cx+rx},${rim} L ${cx+rx},${base} A ${rx},${ry} 0 0 1 ${cx-rx},${base} Z`,
+    walls:`M ${cx-rx},${rim} L ${cx-rx},${base} A ${rx},${ry} 0 0 1 ${cx+rx},${base} L ${cx+rx},${rim}`
+  };
+}
+
+/* ارتفاع مشترک برای همه‌ی استوانه‌ها تا قابل مقایسه باشند */
+function scaleFor(list){
+  const max = Math.max(60, ...list.filter(t=>t.est).map(t=>t.est));
+  return est => Math.max(GEO.minH, Math.min(GEO.maxH, (est/max)*GEO.maxH));
+}
+
+function gauge(t, H, uid, small){
+  const {cx,rx,ry,base,spillMax} = GEO;
+  const p = tubePaths(H);
+  const ghost = !t.est;
+  const ratio = ghost ? Math.min(1, t.log/90) : t.log/t.est;
+  const fillH = Math.min(1, ratio) * H;
+  const spillH = ghost ? 0 : Math.min(spillMax, Math.max(0, ratio-1) * H);
+  const dy = H - fillH;                       // فاصله‌ای که مایع پایین کشیده می‌شود
+  const cid = 'c'+uid;
+
+  // خطوط مدرج هر نیم‌ساعت
+  let ticks='';
+  if(t.est && !small){
+    const per = H / t.est;
+    for(let m=30; m<t.est; m+=30){
+      const y = base - m*per, hour = m%60===0;
+      ticks += `<line class="${hour?'tick-h':'tick'}" x1="${cx-rx+2}" y1="${y}" x2="${cx-rx+(hour?11:6)}" y2="${y}"/>`;
+      if(hour && per*60>17) ticks += `<text class="tick-label" x="${cx-rx-5}" y="${y+3}" text-anchor="end">${fa(m/60)}</text>`;
+    }
+  }
+
+  const waveW = 120, waveY = 4;
+  const wave = `<path class="fluid-wave wave-anim" d="M -30,${waveY} q 15,-4 30,0 t 30,0 t 30,0 t 30,0 t 30,0 L 150,80 L -30,80 Z"/>`;
+
+  return `
+  <svg class="gauge" width="${small?56:88}" height="${small?150:310}" viewBox="0 -6 88 306" aria-label="${t.log} از ${t.est||'؟'} دقیقه">
+    ${ticks}
+    <clipPath id="${cid}"><path d="${p.clip}"/></clipPath>
+    <g clip-path="url(#${cid})">
+      <g class="fluid-g" style="transform:translateY(${dy}px)">
+        <g transform="translate(0,${p.rim})">
+          ${wave}
+          <rect class="fluid-body" x="-30" y="${waveY}" width="180" height="${H+40}"/>
+        </g>
+      </g>
+    </g>
+    ${fillH>2 ? `<ellipse class="meniscus" cx="${cx}" cy="${base-fillH}" rx="${rx-1.5}" ry="${ry-2}"/>`:''}
+    ${spillH>0 ? `
+      <rect class="spill" x="${cx-rx*0.62}" y="${p.rim-spillH}" width="${rx*1.24}" height="${spillH}"/>
+      <ellipse class="spill-cap" cx="${cx}" cy="${p.rim-spillH}" rx="${rx*0.62}" ry="${ry-2.5}"/>`:''}
+    <path class="${ghost?'tube-ghost':'tube-line'}" d="${p.walls}"/>
+    <ellipse class="rim ${spillH>0?'over':''}" cx="${cx}" cy="${p.rim}" rx="${rx}" ry="${ry}"
+      ${ghost?'stroke-dasharray="3 4"':''}/>
+    <rect class="glare" x="${cx-rx+5}" y="${p.rim+4}" width="4" height="${H-12}" rx="2"/>
+  </svg>`;
+}
+
+/* ══ رندر تسک‌های باز ══════════════════════════ */
+let selected = null, timer = null, timerId = null, uid = 0;
+
+function renderBoard(){
+  const open = tasks.filter(t=>t.open);
+  const scale = scaleFor(open);
+  const board = document.getElementById('board');
+  board.innerHTML = open.map((t,i)=>{
+    const H = t.est ? scale(t.est) : GEO.ghostH;
+    const pct = t.est ? Math.round(t.log/t.est*100) : null;
+    return `
+    <div class="slot ${selected===t.id?'sel':''}" draggable="true" data-id="${t.id}">
+      <div class="rank ${t.prio===1?'p1':''}">${pad2(i+1)}</div>
+      ${gauge(t,H,++uid,false)}
+      <div class="meta">
+        <div class="title">${t.title}</div>
+        <div class="cat">${t.cat} · ${prioName(t.prio)}</div>
+        <div class="read">${hm(t.log)} <small>/ ${t.est?hm(t.est):'—'}</small></div>
+        <div class="pct ${pct>100?'over':''}">${pct!==null? (pct>100?'×'+fa((t.log/t.est).toFixed(1)):fa(pct)+'٪') : 'بدون تخمین'}</div>
+        <div class="acts">
+          <button class="go" data-act="run" data-id="${t.id}">${timer===t.id?'توقف':'شروع'}</button>
+          <button data-act="add" data-id="${t.id}">+۱۵د</button>
+          <button data-act="close" data-id="${t.id}">بستن</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('') || '<p class="empty">تسک بازی نمانده. یکی اضافه کن.</p>';
+
+  const sum = open.reduce((s,t)=> s + Math.max(0,(t.est||0)-t.log), 0);
+  document.getElementById('openSum').textContent = hm(sum);
+  bindDrag();
+}
+
+/* ══ رندر آرشیو ════════════════════════════════ */
+let groupBy = 'size';
+
+function renderGroups(){
+  const closed = tasks.filter(t=>!t.open);
+  const keyOf = t => groupBy==='size' ? sizeOf(t.est) : groupBy==='week' ? weekName(t.week) : prioName(t.prio);
+  const map = new Map();
+  closed.forEach(t=>{ const k=keyOf(t); if(!map.has(k)) map.set(k,[]); map.get(k).push(t); });
+
+  const order = [...map.keys()].sort((a,b)=>
+    groupBy==='size' ? sizeRank[a]-sizeRank[b] : 0);
+
+  const scale = scaleFor(closed);
+  document.getElementById('groups').innerHTML = order.map(k=>{
+    const list = map.get(k);
+    const rs = list.filter(t=>t.est).map(t=>t.log/t.est).sort((a,b)=>a-b);
+    const med = rs.length ? rs[Math.floor(rs.length/2)] : null;
+    return `
+    <div class="group">
+      <div class="g-head">
+        <h3>${k}</h3>
+        <span class="eyebrow">${fa(list.length)} تسک</span>
+        <span class="g-stat">${med? 'میانه‌ی نسبت ×'+fa(med.toFixed(2)) : '—'}</span>
+      </div>
+      <div class="minis">
+        ${list.map(t=>{
+          const H = Math.max(34, scale(t.est)*0.45);
+          const r = t.log/t.est;
+          return `<div class="mini">
+            ${gauge(t,H,++uid,true)}
+            <div class="t">${t.title}</div>
+            <div class="ratio ${r>1.15?'hi':r<0.85?'lo':''}">×${fa(r.toFixed(1))}</div>
+          </div>`;
+        }).join('')}
+      </div>
+    </div>`;
+  }).join('') || '<p class="empty">هنوز تسکی بسته نشده.</p>';
+}
+
+/* ══ تعامل ═════════════════════════════════════ */
+document.getElementById('board').addEventListener('click', e=>{
+  const b = e.target.closest('button');
+  const slot = e.target.closest('.slot');
+  if(b){
+    const id = +b.dataset.id, t = tasks.find(x=>x.id===id);
+    if(b.dataset.act==='run') toggleTimer(id);
+    if(b.dataset.act==='add'){ t.log += 15; addToday(15); renderBoard(); }
+    if(b.dataset.act==='close'){ if(timer===id) toggleTimer(id); t.open=false; t.week=0; renderBoard(); renderGroups(); }
+    return;
+  }
+  if(slot){ selected = +slot.dataset.id; renderBoard(); }
+});
+
+let today = 0;
+function addToday(m){
+  today += m;
+  document.getElementById('dayTotal').textContent = hm(today);
+  document.getElementById('dayBar').style.width = Math.min(100, today/360*100)+'%';
+}
+
+function toggleTimer(id){
+  const live = document.getElementById('live'), txt = document.getElementById('liveText');
+  if(timer===id){
+    clearInterval(timerId); timer=null; live.classList.remove('on');
+    txt.textContent='تایمری فعال نیست';
+  }else{
+    if(timer) clearInterval(timerId);
+    timer=id; live.classList.add('on');
+    const t = tasks.find(x=>x.id===id);
+    txt.textContent = 'در حال ثبت: ' + t.title.slice(0,26);
+    let acc=0;
+    timerId = setInterval(()=>{
+      t.log += 1; acc++; addToday(1);
+      if(acc%3===0) renderBoard(); else updateOne(t);
+    }, 900);
+  }
+  renderBoard();
+}
+
+/* به‌روزرسانی سبک بدون رندر کامل، تا انیمیشن نپرد */
+function updateOne(t){
+  const slot = document.querySelector(`.slot[data-id="${t.id}"]`);
+  if(!slot) return;
+  const open = tasks.filter(x=>x.open), scale = scaleFor(open);
+  const H = t.est ? scale(t.est) : GEO.ghostH;
+  const ratio = t.est ? t.log/t.est : Math.min(1,t.log/90);
+  const g = slot.querySelector('.fluid-g');
+  if(g) g.style.transform = `translateY(${H - Math.min(1,ratio)*H}px)`;
+  slot.querySelector('.read').innerHTML = `${hm(t.log)} <small>/ ${t.est?hm(t.est):'—'}</small>`;
+}
+
+/* کشیدن و رها کردن برای اولویت */
+let dragId = null;
+function bindDrag(){
+  document.querySelectorAll('.slot').forEach(el=>{
+    el.addEventListener('dragstart', ()=>{ dragId=+el.dataset.id; el.classList.add('dragging'); });
+    el.addEventListener('dragend', ()=>{ el.classList.remove('dragging'); document.querySelectorAll('.slot').forEach(s=>s.classList.remove('over')); });
+    el.addEventListener('dragover', e=>{ e.preventDefault(); el.classList.add('over'); });
+    el.addEventListener('dragleave', ()=> el.classList.remove('over'));
+    el.addEventListener('drop', e=>{
+      e.preventDefault();
+      const targetId = +el.dataset.id;
+      if(dragId===targetId) return;
+      const from = tasks.findIndex(t=>t.id===dragId);
+      const item = tasks.splice(from,1)[0];
+      const to = tasks.findIndex(t=>t.id===targetId);
+      tasks.splice(to,0,item);
+      renderBoard();
+    });
+  });
+}
+
+document.getElementById('seg').addEventListener('click', e=>{
+  const b = e.target.closest('button'); if(!b) return;
+  groupBy = b.dataset.g;
+  document.querySelectorAll('#seg button').forEach(x=>x.classList.toggle('on', x===b));
+  renderGroups();
+});
+
+/* ══ شروع ══════════════════════════════════════ */
+renderBoard();
+renderGroups();
+addToday(0);
+// انیمیشن ورودی: مایع از صفر بالا می‌آید
+requestAnimationFrame(()=>{
+  document.querySelectorAll('.board .fluid-g').forEach((g,i)=>{
+    const final = g.style.transform;
+    g.style.transition='none';
+    g.style.transform='translateY(240px)';
+    requestAnimationFrame(()=> setTimeout(()=>{
+      g.style.transition=''; g.style.transform=final;
+    }, 60*i));
+  });
+});
+</script>
+</body>
+</html>
